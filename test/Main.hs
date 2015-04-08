@@ -44,7 +44,9 @@ tests = testGroup "Unit tests"
                   "% Some comment\n" ++
                   "\\end{tikzpicture}\n" ++
                   "\n" ++
-                  "    # Some code\n" ++
+                  "Some text\n" ++
+                  "\n" ++
+                  "    Some code\n" ++
                   "\n" ++
                   "\\begin{tikzpicture}\n" ++
                   "% Other comment\n" ++
@@ -56,7 +58,9 @@ tests = testGroup "Unit tests"
                      "\n" ++
                      "![](1bb5e364a4171161fc5e8e8690b21bd4b2551e3244d7983e1ddf299d94118b94.png)\n" ++
                      "\n" ++
-                     "    # Some code\n" ++
+                     "Some text\n" ++
+                     "\n" ++
+                     "    Some code\n" ++
                      "\n" ++
                      "![](8c48be1e04cfbe0d64e6a559133a7a4a76e2dec56701357c505d6f28a7d87a9a.png)\n" ++
                      "\n" ++
