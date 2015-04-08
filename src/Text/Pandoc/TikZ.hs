@@ -9,6 +9,7 @@ import Text.Pandoc.Writers.LaTeX (writeLaTeX)
 import qualified Data.ByteString.Lazy.Char8 as BS
 
 import Text.Pandoc.TikZ.Hash (hash)
+import Text.Pandoc.TikZ.GhostScript (convertPDFtoPNG)
 
 newtype LatexSource = LatexSource String
                       deriving (Eq, Show)
@@ -30,6 +31,9 @@ replaceLatexSourceWithHashImages = walk replaceLatexSourceWithHashImage
 
 readDoc :: String -> Pandoc
 readDoc = readMarkdown def
+
+writeDoc :: Pandoc -> String
+writeDoc = writeMarkdown def
 
 compileLatexSource :: LatexSource -> IO (Either String BS.ByteString)
 compileLatexSource (LatexSource source) = do
@@ -56,7 +60,10 @@ processDocument document = do
   mapM_ f latexSources
   return outputDocument
   where
-    f source@(LatexSource raw) = compileLatexSourceToFile source (hash raw)
+    f source@(LatexSource raw) = do
+      let h = hash raw
+      compileLatexSourceToFile source h
+      convertPDFtoPNG (h ++ ".pdf") (h ++ ".png")
 
 template :: String
 template = "\\documentclass{standalone}\n" ++
