@@ -27,11 +27,12 @@ tests = testGroup "Unit tests"
                   "\\end{tikzpicture}\n" ++
                   "\n" ++
                   "Simple *text*\n"
-          expected = [ "\\begin{tikzpicture}\n" ++
-                       "% Some comment\n" ++
-                       "\\end{tikzpicture}"
-                     , "\\begin{tikzpicture}\n" ++
-                       "% Other comment\n" ++
-                       "\\end{tikzpicture}"]
+          expected = [ LatexSource ("\\begin{tikzpicture}\n" ++
+                                    "% Some comment\n" ++
+                                    "\\end{tikzpicture}")
+                     , LatexSource ("\\begin{tikzpicture}\n" ++
+                                    "% Other comment\n" ++
+                                    "\\end{tikzpicture}")
+                     ]
       in extractLatexSources (readDoc input) @?= expected
   ]
