@@ -19,6 +19,9 @@ library
   build-depends:      base == 4.*
                     , pandoc
                     , pandoc-types
+                    , bytestring
+                    , base16-bytestring
+                    , cryptohash
 
 
 executable pandoc-tikz
