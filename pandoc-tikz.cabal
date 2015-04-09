@@ -34,6 +34,7 @@ executable pandoc-tikz
   build-depends:      base == 4.*
                     , pandoc-tikz
                     , cmdargs
+                    , filepath
 
 
 Test-Suite Tests
