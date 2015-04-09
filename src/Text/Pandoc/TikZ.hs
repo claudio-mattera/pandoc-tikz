@@ -53,8 +53,8 @@ compileLatexSourceToFile source filename = do
     Left msg -> error $ "Got error!!!" ++ msg
     Right rawPdf -> BS.writeFile (filename ++ ".pdf") rawPdf
 
-processDocument :: Pandoc -> IO Pandoc
-processDocument document = do
+processDocument :: FilePath -> Pandoc -> IO Pandoc
+processDocument ghostScriptPath document = do
   let outputDocument = replaceLatexSourceWithHashImages document
       latexSources = extractLatexSources document
   mapM_ f latexSources
@@ -63,7 +63,7 @@ processDocument document = do
     f source@(LatexSource raw) = do
       let h = hash raw
       compileLatexSourceToFile source h
-      convertPDFtoPNG (h ++ ".pdf") (h ++ ".png")
+      convertPDFtoPNG ghostScriptPath (h ++ ".pdf") (h ++ ".png")
 
 template :: String
 template = "\\documentclass{standalone}\n" ++

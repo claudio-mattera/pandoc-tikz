@@ -25,6 +25,7 @@ library
                     , base16-bytestring
                     , cryptohash
                     , process
+                    , directory
 
 
 executable pandoc-tikz

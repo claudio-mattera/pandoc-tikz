@@ -15,12 +15,15 @@ main = do
   Options
     { inputFilePath = inputFilePath
     , maybeOutputFilePath = maybeOutputFilePath
+    , maybeGhostScriptPath = maybeGhostScriptPath
     } <- (if null args then withArgs ["--help"] else id) getOptions
   let outputFilePath =
         fromMaybe (defaultOutputFilePath inputFilePath) maybeOutputFilePath
+      ghostScriptPath =
+        fromMaybe "gs" maybeGhostScriptPath
   inputFile <- readFile inputFilePath
   let inputDocument = readDoc inputFile
-  outputDocument <- processDocument inputDocument
+  outputDocument <- processDocument ghostScriptPath inputDocument
   writeFile outputFilePath . writeDoc $ outputDocument
 
   where
@@ -30,6 +33,7 @@ main = do
 data Options = Options
     { inputFilePath :: FilePath
     , maybeOutputFilePath :: Maybe FilePath
+    , maybeGhostScriptPath :: Maybe FilePath
     } deriving (Data, Typeable, Show, Eq)
 
 options :: Options
@@ -45,6 +49,13 @@ options = Options
         &= name "output"
         &= typFile
         &= help "Output file path"
+    , maybeGhostScriptPath =
+        def
+        &= explicit
+        &= name "g"
+        &= name "ghostscript"
+        &= typFile
+        &= help "GhostScript path"
     }
 
 getOptions :: IO Options
