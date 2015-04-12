@@ -1,6 +1,8 @@
 
 module Text.Pandoc.TikZ.GhostScript where
 
+import Control.Monad.Trans.Except
+import Control.Monad.Trans.Class (lift)
 import System.Process (proc,
                        createProcess,
                        waitForProcess,
@@ -15,7 +17,7 @@ import System.Directory (removeFile)
 import Control.Exception (catch, throwIO)
 import System.IO.Error (isDoesNotExistError)
 
-convertPDFtoPNG :: FilePath -> FilePath -> FilePath -> IO (Either String ())
+convertPDFtoPNG :: FilePath -> FilePath -> FilePath -> ExceptT String IO ()
 convertPDFtoPNG ghostScriptPath pdfFileName pngFileName = do
   let arguments = [ "-sDEVICE=pngalpha"
                   , "-o"
@@ -25,14 +27,14 @@ convertPDFtoPNG ghostScriptPath pdfFileName pngFileName = do
                   ]
       process = proc ghostScriptPath arguments
   (Nothing, Just _, Just stderrHandle, handle) <-
-    createProcess process { std_out = CreatePipe, std_err = CreatePipe }
-  exitCode <- waitForProcess handle
-  removeIfExists pdfFileName
+    lift $ createProcess process { std_out = CreatePipe, std_err = CreatePipe }
+  exitCode <- lift $ waitForProcess handle
+  lift $ removeIfExists pdfFileName
   case exitCode of
     ExitFailure v -> do
-      msg <- hGetContents stderrHandle
-      return $ Left $ "Exit code: " ++ show v ++ ", output: " ++ msg
-    ExitSuccess -> return $ Right ()
+      msg <- lift $ hGetContents stderrHandle
+      throwE $ "Exit code: " ++ show v ++ ", output: " ++ msg
+    ExitSuccess -> return ()
 
 removeIfExists :: FilePath -> IO ()
 removeIfExists fileName = removeFile fileName `catch` handleExists

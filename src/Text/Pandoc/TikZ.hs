@@ -6,6 +6,9 @@ import Text.Pandoc.Walk (query, walk)
 import Text.Pandoc.PDF (makePDF)
 import Text.Pandoc.Writers.LaTeX (writeLaTeX)
 
+import Control.Monad.Trans.Except
+import Control.Monad.Trans.Class (lift)
+
 import qualified Data.ByteString.Lazy.Char8 as BS
 
 import Text.Pandoc.TikZ.Hash (hash)
@@ -35,41 +38,41 @@ readDoc = readMarkdown def
 writeDoc :: Pandoc -> String
 writeDoc = writeMarkdown def
 
-compileLatexSource :: LatexSource -> IO (Either String BS.ByteString)
+compileLatexSource :: LatexSource -> ExceptT String IO BS.ByteString
 compileLatexSource (LatexSource source) = do
   let document = Pandoc nullMeta [RawBlock (Format "latex") source]
       options = def { writerStandalone = True
                     , writerTemplate = template
                     }
-  output <- makePDF "pdflatex" writeLaTeX options document
+  output <- lift $ makePDF "pdflatex" writeLaTeX options document
   case output of
-    Left msg -> return $ Left $ BS.unpack msg
-    Right output -> return $ Right output
+    Left msg -> throwE $ BS.unpack msg
+    Right output -> return output
 
-compileLatexSourceToFile :: LatexSource -> FilePath -> IO (Either String ())
+compileLatexSourceToFile :: LatexSource -> FilePath -> ExceptT String IO ()
 compileLatexSourceToFile source filename = do
-  result <- compileLatexSource source
-  case result of
-    Left msg -> return $ Left msg
-    Right rawPdf -> do
-      BS.writeFile (filename ++ ".pdf") rawPdf
-      return $ Right ()
+  rawPdf <- compileLatexSource source
+  lift $ BS.writeFile (filename ++ ".pdf") rawPdf
+  return ()
 
 processDocument :: FilePath -> Pandoc -> IO Pandoc
 processDocument ghostScriptPath document = do
   let outputDocument = replaceLatexSourceWithHashImages document
       latexSources = extractLatexSources document
-  outcomes <- mapM f latexSources
-  mapM_ g outcomes
+
+  outcomes <- mapM (runExceptT . compileLatexToPng) latexSources
+  mapM_ handleOutcomes outcomes
+
   return outputDocument
   where
-    f source@(LatexSource raw) = do
+    compileLatexToPng :: LatexSource -> ExceptT String IO ()
+    compileLatexToPng source@(LatexSource raw) = do
       let h = hash raw
       compileLatexSourceToFile source h
       convertPDFtoPNG ghostScriptPath (h ++ ".pdf") (h ++ ".png")
 
-    g (Right _) = return ()
-    g (Left message) = putStrLn $ "Error:\n" ++ message
+    handleOutcomes (Right _) = return ()
+    handleOutcomes (Left message) = putStrLn $ "Error:\n" ++ message
 
 template :: String
 template = "\\documentclass{standalone}\n" ++

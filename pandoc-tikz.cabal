@@ -26,6 +26,8 @@ library
                     , cryptohash
                     , process
                     , directory
+                    , transformers
+                    , transformers-compat
 
 
 executable pandoc-tikz
