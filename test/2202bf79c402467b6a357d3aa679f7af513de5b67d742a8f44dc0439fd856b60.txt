@@ -1,0 +1,4 @@
+! Undefined control sequence.
+<recently read> \ojidoj 
+                        
+l.6 \ojidoj

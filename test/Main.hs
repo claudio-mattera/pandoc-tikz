@@ -89,7 +89,17 @@ tests = testGroup "Unit tests"
           return ()
 
         expected = "test/4cf7760f6b5cdc55902b25a2693874817a40a2fc2d069bd37a08d4adeceb5dc5.pdf"
-    in goldenVsFileDiff "Compile and write riangle plot" makePdfDiff expected outputFileName worker
+    in goldenVsFileDiff "Compile and write triangle plot" makePdfDiff expected outputFileName worker
+  ,
+    let source = LatexSource "\\begin{tikzpicture}\n\\ojidoj nk\\lknlkkn\\\\\\lkd f fkn\\\n\\end{tikzpicture}"
+        worker = do
+          result <- runExceptT $ compileLatexSource source
+          case result of
+            Right _ -> return BS.empty
+            Left output -> return $ BS.pack output
+
+        expected = "test/2202bf79c402467b6a357d3aa679f7af513de5b67d742a8f44dc0439fd856b60.txt"
+    in goldenVsStringDiff "Invalid LaTeX" makeTexOutputDiff expected worker
   ]
 
 
@@ -106,6 +116,17 @@ makePdfDiff ref new = [
   , "/PTEX.Fullbanner"
   , "-I"
   , "/Producer"
+  , "-u"
+  , ref
+  , new
+  ]
+
+makeTexOutputDiff ref new = [
+    "diff"
+  , "--text"
+  , "--ignore-all-space"
+  , "--ignore-space-change"
+  , "--ignore-blank-lines"
   , "-u"
   , ref
   , new
