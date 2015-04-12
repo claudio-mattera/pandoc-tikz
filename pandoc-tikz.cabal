@@ -56,6 +56,9 @@ Test-Suite Tests
     build-depends:    base == 4.*
                     , tasty
                     , tasty-hunit
+                    , tasty-golden
+                    , transformers-compat
+                    , bytestring
                     , pandoc-tikz
 
 

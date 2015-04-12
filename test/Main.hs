@@ -1,7 +1,11 @@
 module Main where
 
+import Control.Monad.Trans.Except (runExceptT)
+import qualified Data.ByteString.Lazy.Char8 as BS
+
 import Test.Tasty
 import Test.Tasty.HUnit
+import Test.Tasty.Golden
 
 import Text.Pandoc.TikZ
 import Text.Pandoc.TikZ.Internal
@@ -67,4 +71,33 @@ tests = testGroup "Unit tests"
                      "\n" ++
                      "Simple *text*\n"
       in replaceLatexSourceWithHashImages (readDoc input) @?= readDoc expected
+  ,
+    let source = LatexSource "\\begin{tikzpicture}\n\\draw (0.1,0) -- (0,0) -- (0,0.1) -- cycle;\n\\end{tikzpicture}"
+        worker = do
+          result <- runExceptT . compileLatexSource $ source
+          case result of
+            Right output -> return output
+            Left _ -> return BS.empty
+
+        expected = "test/4cf7760f6b5cdc55902b25a2693874817a40a2fc2d069bd37a08d4adeceb5dc5.pdf"
+    in goldenVsStringDiff "Triangle plot" makePdfDiff expected worker
+  ]
+
+
+makePdfDiff ref new = [
+    "diff"
+  , "--text"
+  , "-I"
+  , "/ID"
+  , "-I"
+  , "/CreationDate"
+  , "-I"
+  , "/ModDate"
+  , "-I"
+  , "/PTEX.Fullbanner"
+  , "-I"
+  , "/Producer"
+  , "-u"
+  , ref
+  , new
   ]
