@@ -1,6 +1,8 @@
 
 module Text.Pandoc.TikZ.GhostScript where
 
+import Text.Pandoc.TikZ.Error (guardIO)
+
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Class (lift)
 import System.Process (proc,
@@ -27,7 +29,7 @@ convertPDFtoPNG ghostScriptPath pdfFileName pngFileName = do
                   ]
       process = proc ghostScriptPath arguments
   (Nothing, Just _, Just stderrHandle, handle) <-
-    lift $ createProcess process { std_out = CreatePipe, std_err = CreatePipe }
+    guardIO $ createProcess process { std_out = CreatePipe, std_err = CreatePipe }
   exitCode <- lift $ waitForProcess handle
   lift $ removeIfExists pdfFileName
   case exitCode of

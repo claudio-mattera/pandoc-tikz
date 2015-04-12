@@ -29,6 +29,10 @@ library
                     , transformers
                     , transformers-compat
 
+                    , monad-control
+                    , mtl
+                    , lifted-base
+
 
 executable pandoc-tikz
   main-is:            Main.hs
