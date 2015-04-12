@@ -4,6 +4,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Text.Pandoc.TikZ
+import Text.Pandoc.TikZ.Internal
 
 main :: IO ()
 main =
