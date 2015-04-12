@@ -6,6 +6,8 @@ import Text.Pandoc.Walk (query, walk)
 import Text.Pandoc.PDF (makePDF)
 import Text.Pandoc.Writers.LaTeX (writeLaTeX)
 
+import System.FilePath ((</>), (<.>))
+
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Class (lift)
 
@@ -52,11 +54,11 @@ compileLatexSource (LatexSource source) = do
 compileLatexSourceToFile :: LatexSource -> FilePath -> ExceptT String IO ()
 compileLatexSourceToFile source filename = do
   rawPdf <- compileLatexSource source
-  lift $ BS.writeFile (filename ++ ".pdf") rawPdf
+  lift $ BS.writeFile filename rawPdf
   return ()
 
-processDocument :: FilePath -> Pandoc -> IO Pandoc
-processDocument ghostScriptPath document = do
+processDocument :: FilePath -> FilePath -> Pandoc -> IO Pandoc
+processDocument ghostScriptPath outputDirectory document = do
   let outputDocument = replaceLatexSourceWithHashImages document
       latexSources = extractLatexSources document
 
@@ -68,8 +70,10 @@ processDocument ghostScriptPath document = do
     compileLatexToPng :: LatexSource -> ExceptT String IO ()
     compileLatexToPng source@(LatexSource raw) = do
       let h = hash raw
-      compileLatexSourceToFile source h
-      convertPDFtoPNG ghostScriptPath (h ++ ".pdf") (h ++ ".png")
+          pdfFilePath = outputDirectory </> h <.> "pdf"
+          pngFilePath = outputDirectory </> h <.> "png"
+      compileLatexSourceToFile source pdfFilePath
+      convertPDFtoPNG ghostScriptPath pdfFilePath pngFilePath
 
     handleOutcomes (Right _) = return ()
     handleOutcomes (Left message) = putStrLn $ "Error:\n" ++ message

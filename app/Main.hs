@@ -4,7 +4,8 @@ module Main where
 
 import System.Environment (getArgs, withArgs)
 import System.Console.CmdArgs
-import System.FilePath (dropExtension, (<.>))
+import System.FilePath (dropExtension, takeFileName, (<.>), (</>))
+import System.Directory (createDirectoryIfMissing)
 import Data.Maybe (fromMaybe)
 
 import Text.Pandoc.TikZ (processDocument, readDoc, writeDoc)
@@ -14,25 +15,21 @@ main = do
   args <- getArgs
   Options
     { inputFilePath = inputFilePath
-    , maybeOutputFilePath = maybeOutputFilePath
+    , outputPath = outputPath
     , maybeGhostScriptPath = maybeGhostScriptPath
     } <- (if null args then withArgs ["--help"] else id) getOptions
-  let outputFilePath =
-        fromMaybe (defaultOutputFilePath inputFilePath) maybeOutputFilePath
-      ghostScriptPath =
+  createDirectoryIfMissing True outputPath
+  let ghostScriptPath =
         fromMaybe "gs" maybeGhostScriptPath
   inputFile <- readFile inputFilePath
   let inputDocument = readDoc inputFile
-  outputDocument <- processDocument ghostScriptPath inputDocument
+  outputDocument <- processDocument ghostScriptPath outputPath inputDocument
+  let outputFilePath = outputPath </> takeFileName inputFilePath
   writeFile outputFilePath . writeDoc $ outputDocument
-
-  where
-    defaultOutputFilePath inputFilePath =
-      dropExtension inputFilePath ++ "-output" <.> ".md"
 
 data Options = Options
     { inputFilePath :: FilePath
-    , maybeOutputFilePath :: Maybe FilePath
+    , outputPath :: FilePath
     , maybeGhostScriptPath :: Maybe FilePath
     } deriving (Data, Typeable, Show, Eq)
 
@@ -40,15 +37,12 @@ options :: Options
 options = Options
     { inputFilePath =
         def
-        &= args
+        &= argPos 0
         &= typFile
-    , maybeOutputFilePath =
+    , outputPath =
         def
-        &= explicit
-        &= name "o"
-        &= name "output"
-        &= typFile
-        &= help "Output file path"
+        &= argPos 1
+        &= typDir
     , maybeGhostScriptPath =
         def
         &= explicit
