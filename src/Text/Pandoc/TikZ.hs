@@ -46,24 +46,30 @@ compileLatexSource (LatexSource source) = do
     Left msg -> return $ Left $ BS.unpack msg
     Right output -> return $ Right output
 
-compileLatexSourceToFile :: LatexSource -> FilePath -> IO ()
+compileLatexSourceToFile :: LatexSource -> FilePath -> IO (Either String ())
 compileLatexSourceToFile source filename = do
   result <- compileLatexSource source
   case result of
-    Left msg -> error $ "Got error!!!" ++ msg
-    Right rawPdf -> BS.writeFile (filename ++ ".pdf") rawPdf
+    Left msg -> return $ Left msg
+    Right rawPdf -> do
+      BS.writeFile (filename ++ ".pdf") rawPdf
+      return $ Right ()
 
 processDocument :: FilePath -> Pandoc -> IO Pandoc
 processDocument ghostScriptPath document = do
   let outputDocument = replaceLatexSourceWithHashImages document
       latexSources = extractLatexSources document
-  mapM_ f latexSources
+  outcomes <- mapM f latexSources
+  mapM_ g outcomes
   return outputDocument
   where
     f source@(LatexSource raw) = do
       let h = hash raw
       compileLatexSourceToFile source h
       convertPDFtoPNG ghostScriptPath (h ++ ".pdf") (h ++ ".png")
+
+    g (Right _) = return ()
+    g (Left message) = putStrLn $ "Error:\n" ++ message
 
 template :: String
 template = "\\documentclass{standalone}\n" ++

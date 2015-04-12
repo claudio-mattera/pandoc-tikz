@@ -31,7 +31,7 @@ convertPDFtoPNG ghostScriptPath pdfFileName pngFileName = do
   case exitCode of
     ExitFailure v -> do
       msg <- hGetContents stderrHandle
-      error $ "Exit code: " ++ show v ++ ", output: " ++ msg
+      return $ Left $ "Exit code: " ++ show v ++ ", output: " ++ msg
     ExitSuccess -> return $ Right ()
 
 removeIfExists :: FilePath -> IO ()
