@@ -4,7 +4,7 @@ module Main where
 
 import System.Environment (getArgs, withArgs)
 import System.Console.CmdArgs
-import System.FilePath (dropExtension)
+import System.FilePath (dropExtension, (<.>))
 import Data.Maybe (fromMaybe)
 
 import Text.Pandoc.TikZ (processDocument, readDoc, writeDoc)
@@ -28,7 +28,7 @@ main = do
 
   where
     defaultOutputFilePath inputFilePath =
-      dropExtension inputFilePath ++ "-output.md"
+      dropExtension inputFilePath ++ "-output" <.> ".md"
 
 data Options = Options
     { inputFilePath :: FilePath
