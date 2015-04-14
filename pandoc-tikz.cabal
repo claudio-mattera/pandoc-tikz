@@ -57,6 +57,7 @@ Test-Suite Tests
                     , tasty
                     , tasty-hunit
                     , tasty-golden
+                    , transformers
                     , transformers-compat
                     , bytestring
                     , pandoc-tikz
